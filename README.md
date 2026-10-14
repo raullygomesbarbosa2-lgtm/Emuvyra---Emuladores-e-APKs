@@ -1,7 +1,9 @@
 # Zyphora8
 
-Emulador Android nativo de CHIP-8, sem WebView. O código-fonte completo está em `Zyphora8-Android-Fonte.zip`.
+Emulador **Android nativo**, sem WebView, com CHIP-8 e Mega Drive (Genesis Plus GX).
 
-Inclui 50 programas/ROMs: 49 do CHIP-8 Archive, cuja página declara licença CC0, e uma demo original. O catálogo e autores estão dentro do projeto em `app/src/main/assets/games.json` e `ROM-CREDITS.md`.
-
-O GitHub Actions compila um APK debug e o publica na aba Releases quando o build passa. Esta versão implementa CHIP-8 clássico; ROMs Super-CHIP/XO-CHIP podem não funcionar. APK de debug usa assinatura temporária do CI, então uma atualização pode exigir remover a versão anterior.
+- APK debug mais recente: abra a aba Releases e baixe o arquivo `app-debug.apk`.
+- O app inclui 50 programas CHIP-8 (49 declarados CC0 no CHIP-8 Archive e uma demo original).
+- Não inclui ROMs comerciais de Mega Drive: escolha no app um arquivo que você tenha direito de usar.
+- O workflow compila Genesis Plus GX para ARMv7 e ARM64; o APK debug usa assinatura temporária do CI, então versões futuras podem exigir desinstalação antes da atualização.
+- CHIP-8 clássico está implementado; Super-CHIP/XO-CHIP podem não funcionar.
