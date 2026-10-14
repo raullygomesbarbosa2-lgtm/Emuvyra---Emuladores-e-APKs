@@ -1,0 +1,45 @@
+name: Build and publish APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Extract source bundle
+        run: unzip -q Zyphora8-Android-Fonte.zip -d source
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Install Android packages
+        run: sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0' 'platform-tools'
+      - name: Build debug APK
+        run: cd source && gradle --no-daemon assembleDebug
+      - name: Publish APK as public GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: Zyphora8 v1.0.0
+          target_commitish: main
+          body: |
+            APK de teste do emulador CHIP-8 Zyphora8.
+            Compatibilidade: CHIP-8 clássico; pode não executar ROMs Super-CHIP/XO-CHIP.
+            Este APK debug é assinado pela chave temporária do CI; versões futuras podem exigir desinstalar esta versão antes de instalar outra.
+          files: source/app/build/outputs/apk/debug/app-debug.apk
+          make_latest: true
