@@ -11,6 +11,10 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      NDK_VERSION: 27.2.12479018
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,18 +41,30 @@ jobs:
       - name: Install Android packages
         run: |
           yes | sdkmanager --licenses
-          sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'platform-tools'
+          sdkmanager --sdk_root="$ANDROID_HOME" 'platforms;android-35' 'build-tools;35.0.0' 'platform-tools' "ndk;${NDK_VERSION}"
+      - name: Build Genesis Plus GX native core
+        run: |
+          git clone --depth 1 https://github.com/libretro/Genesis-Plus-GX-Wide.git "$RUNNER_TEMP/genesis-plus-gx"
+          cd "$RUNNER_TEMP/genesis-plus-gx/libretro/jni"
+          "$ANDROID_HOME/ndk/${NDK_VERSION}/ndk-build" APP_ABI="armeabi-v7a arm64-v8a" APP_PLATFORM=android-21 -j2
+          mkdir -p "$GITHUB_WORKSPACE/source/app/src/main/jniLibs/armeabi-v7a" "$GITHUB_WORKSPACE/source/app/src/main/jniLibs/arm64-v8a" "$GITHUB_WORKSPACE/source/app/src/main/assets"
+          ARMV7_CORE=$(find "$RUNNER_TEMP/genesis-plus-gx" -type f -path '*/armeabi-v7a/libretro.so' -print -quit)
+          ARM64_CORE=$(find "$RUNNER_TEMP/genesis-plus-gx" -type f -path '*/arm64-v8a/libretro.so' -print -quit)
+          test -n "$ARMV7_CORE" && test -n "$ARM64_CORE"
+          cp "$ARMV7_CORE" "$GITHUB_WORKSPACE/source/app/src/main/jniLibs/armeabi-v7a/libgenesis_plus_gx_libretro_android.so"
+          cp "$ARM64_CORE" "$GITHUB_WORKSPACE/source/app/src/main/jniLibs/arm64-v8a/libgenesis_plus_gx_libretro_android.so"
+          cp "$RUNNER_TEMP/genesis-plus-gx/LICENSE.txt" "$GITHUB_WORKSPACE/source/app/src/main/assets/Genesis-Plus-GX-LICENSE.txt"
       - name: Build debug APK
         run: cd source && gradle --no-daemon assembleDebug
       - name: Publish APK as public GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0
-          name: Zyphora8 v1.0.0
+          tag_name: v1.1.0
+          name: Zyphora8 v1.1.0
           target_commitish: main
           body: |
-            APK de teste do emulador CHIP-8 Zyphora8.
-            Compatibilidade: CHIP-8 clássico; pode não executar ROMs Super-CHIP/XO-CHIP.
-            Este APK debug é assinado pela chave temporária do CI; versões futuras podem exigir desinstalar esta versão antes de instalar outra.
+            APK de teste do emulador nativo Zyphora8: CHIP-8 e Mega Drive via Genesis Plus GX.
+            Inclui jogos CHIP-8 CC0; ROMs comerciais de Mega Drive não vêm no APK, importe arquivos seus pelo seletor local.
+            Este APK debug é assinado pela chave temporária do CI; atualizações futuras podem exigir desinstalar esta versão antes de instalar outra.
           files: source/app/build/outputs/apk/debug/app-debug.apk
           make_latest: true
